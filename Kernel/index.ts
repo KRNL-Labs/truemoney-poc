@@ -1,9 +1,24 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { body, param, validationResult } from 'express-validator';
+import axios from 'axios';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Chainalysis API configuration
+const CHAINALYSIS_BASE_URL = process.env.CHAINALYSIS_BASE_URL || 'https://api.chainalysis.com';
+const CHAINALYSIS_API_TOKEN = process.env.CHAINALYSIS_API_TOKEN;
+
+// Check if API token is configured
+if (!CHAINALYSIS_API_TOKEN) {
+  console.error('Error: CHAINALYSIS_API_TOKEN is not set. API token is required.');
+  process.exit(1);
+}
 
 // Middleware
 app.use(cors());
@@ -47,39 +62,6 @@ interface RiskAssessment {
   };
 }
 
-// Mock data generator for demonstration
-function generateMockRiskAssessment(address: string): RiskAssessment {
-  const riskLevels: Array<'Low' | 'Medium' | 'High' | 'Severe'> = ['Low', 'Medium', 'High', 'Severe'];
-  const categories = ['exchange', 'fee', 'unnamed service', 'defi', 'gambling', 'mixer'];
-  
-  // Simple hash-based pseudo-randomization for consistent results
-  const hash = address.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
-    return a & a;
-  }, 0);
-  
-  const risk = riskLevels[Math.abs(hash) % riskLevels.length];
-  const numExposures = (Math.abs(hash) % 3) + 1;
-  
-  const exposures = Array.from({ length: numExposures }, (_, i) => ({
-    category: categories[(Math.abs(hash) + i) % categories.length],
-    categoryId: `cat_${(Math.abs(hash) + i) % 1000}`,
-    value: Math.abs((hash * (i + 1)) % 1000000) / 100,
-    valueUsd: Math.abs((hash * (i + 1)) % 1000000) / 100 * 2000 // Mock USD conversion
-  }));
-
-  return {
-    address,
-    risk,
-    riskReason: risk !== 'Low' ? `Address has ${risk.toLowerCase()} risk exposure to ${exposures[0].category}` : undefined,
-    addressType: 'PRIVATE_WALLET',
-    addressIdentifications: [],
-    exposures,
-    triggers: risk === 'High' || risk === 'Severe' ? [exposures[0]] : [],
-    status: 'COMPLETE'
-  };
-}
-
 // Validation middleware
 const validateAddress = [
   param('address')
@@ -93,8 +75,8 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Main endpoint - following Chainalysis API format
-app.get('/api/risk/v2/entities/:address', validateAddress, (req: Request, res: Response) => {
+// Main endpoint - forwards requests to the Chainalysis API
+app.get('/api/risk/v2/entities/:address', validateAddress, async (req: Request, res: Response) => {
   try {
     // Check for validation errors
     const errors = validationResult(req);
@@ -106,44 +88,35 @@ app.get('/api/risk/v2/entities/:address', validateAddress, (req: Request, res: R
     }
 
     const { address } = req.params;
-    const riskAssessment = generateMockRiskAssessment(address);
     
-    res.json(riskAssessment);
-  } catch (error) {
-    console.error('Error processing risk assessment:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to process risk assessment'
+    // Forward the request to the Chainalysis API
+    console.log(`Forwarding request to Chainalysis API for address: ${address}`);
+    const apiUrl = `${CHAINALYSIS_BASE_URL}/api/risk/v2/entities/${address}`;
+    
+    const response = await axios.get(apiUrl, {
+      headers: {
+        'Token': CHAINALYSIS_API_TOKEN
+      }
     });
-  }
-});
-
-// Alternative endpoint for POST requests (following KRNL patterns)
-app.post('/api/wallet/analyze', [
-  body('address')
-    .isLength({ min: 40, max: 42 })
-    .matches(/^0x[a-fA-F0-9]{40}$/)
-    .withMessage('Invalid Ethereum address format')
-], (req: Request, res: Response) => {
-  try {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Invalid request',
-        details: errors.array()
+    
+    return res.json(response.data);
+  } catch (error: any) {
+    console.error('Error processing risk assessment:', error);
+    
+    // Handle Chainalysis API errors
+    if (error.response) {
+      const statusCode = error.response.status || 500;
+      return res.status(statusCode).json({
+        error: error.response.data.error || 'API Error',
+        message: error.response.data.message || 'Failed to process risk assessment',
+        timestamp: new Date().toISOString()
       });
     }
-
-    const { address } = req.body;
-    const riskAssessment = generateMockRiskAssessment(address);
     
-    res.json(riskAssessment);
-  } catch (error) {
-    console.error('Error processing wallet analysis:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
-      message: 'Failed to process wallet analysis'
+      message: 'Failed to process risk assessment',
+      timestamp: new Date().toISOString()
     });
   }
 });
@@ -157,7 +130,7 @@ app.post('/api/wallet/analyze/bulk', [
     .isLength({ min: 40, max: 42 })
     .matches(/^0x[a-fA-F0-9]{40}$/)
     .withMessage('Each address must be a valid Ethereum address')
-], (req: Request, res: Response) => {
+], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -168,21 +141,50 @@ app.post('/api/wallet/analyze/bulk', [
     }
 
     const { addresses } = req.body;
-    const results = addresses.map((address: string) => ({
-      address,
-      analysis: generateMockRiskAssessment(address)
-    }));
     
-    res.json({
+    // Process addresses in batches to avoid overwhelming the Chainalysis API
+    const batchSize = 10;
+    const results = [];
+    
+    for (let i = 0; i < addresses.length; i += batchSize) {
+      const batch = addresses.slice(i, i + batchSize);
+      const batchPromises = batch.map(async (address: string) => {
+        try {
+          const apiUrl = `${CHAINALYSIS_BASE_URL}/api/risk/v2/entities/${address}`;
+          const response = await axios.get(apiUrl, {
+            headers: {
+              'Token': CHAINALYSIS_API_TOKEN
+            }
+          });
+          
+          return {
+            address,
+            assessment: response.data
+          };
+        } catch (error: any) {
+          console.error(`Error fetching data for address ${address}:`, error.message);
+          return {
+            address,
+            error: error.response?.data?.message || 'Failed to fetch risk assessment'
+          };
+        }
+      });
+      
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+    }
+    
+    return res.json({
       results,
       totalAnalyzed: results.length,
       timestamp: new Date().toISOString()
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error processing bulk analysis:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
-      message: 'Failed to process bulk analysis'
+      message: error.message || 'Failed to process bulk analysis',
+      timestamp: new Date().toISOString()
     });
   }
 });
