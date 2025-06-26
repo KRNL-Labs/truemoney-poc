@@ -99,7 +99,22 @@ app.get('/api/risk/v2/entities/:address', validateAddress, async (req: Request, 
       }
     });
     
-    return res.json(response.data);
+    // Process the response to handle null values
+    const processValue = (value: any): any => {
+      if (value === null) {
+        return "null";
+      } else if (Array.isArray(value)) {
+        return value.map(processValue);
+      } else if (typeof value === 'object' && value !== null) {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, processValue(val)])
+        );
+      }
+      return value;
+    };
+    
+    const processedData = processValue(response.data);
+    return res.json(processedData);
   } catch (error: any) {
     console.error('Error processing risk assessment:', error);
     
@@ -120,6 +135,27 @@ app.get('/api/risk/v2/entities/:address', validateAddress, async (req: Request, 
     });
   }
 });
+
+// Process batch results with null handling
+const processBatchResults = (results: any[]) => {
+  const processValue = (value: any): any => {
+    if (value === null) {
+      return "null";
+    } else if (Array.isArray(value)) {
+      return value.map(processValue);
+    } else if (typeof value === 'object' && value !== null) {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [key, processValue(val)])
+      );
+    }
+    return value;
+  };
+
+  return results.map(result => ({
+    ...result,
+    assessment: result.assessment ? processValue(result.assessment) : undefined
+  }));
+};
 
 // Bulk analysis endpoint
 app.post('/api/wallet/analyze/bulk', [
@@ -171,7 +207,7 @@ app.post('/api/wallet/analyze/bulk', [
       });
       
       const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
+      results.push(...processBatchResults(batchResults));
     }
     
     return res.json({
