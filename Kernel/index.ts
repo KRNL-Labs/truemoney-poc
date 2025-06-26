@@ -21,12 +21,20 @@ if (!CHAINALYSIS_API_TOKEN) {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
+  exposedHeaders: ['ngrok-skip-browser-warning']
+}));
 app.use(express.json());
 
 // Add ngrok-skip-browser-warning header to all responses
 app.use((req, res, next) => {
-  res.setHeader('ngrok-skip-browser-warning', 'true');
+  res.set({
+    'ngrok-skip-browser-warning': 'true',
+    'X-Content-Type-Options': 'nosniff'
+  });
   next();
 });
 
@@ -81,7 +89,74 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Main endpoint - forwards requests to the Chainalysis API
+// POST endpoint that forwards to Chainalysis API
+app.post('/api/risk/v2/entities', [
+  body('address')
+    .isLength({ min: 40, max: 42 })
+    .matches(/^0x[a-fA-F0-9]{40}$/)
+    .withMessage('Invalid Ethereum address format')
+], async (req: Request, res: Response) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Invalid address format',
+        details: errors.array()
+      });
+    }
+
+    const { address } = req.body;
+    
+    // Forward the request to the Chainalysis API
+    console.log(`[POST] Forwarding request to Chainalysis API for address: ${address}`);
+    const apiUrl = `${CHAINALYSIS_BASE_URL}/api/risk/v2/entities/${address}`;
+    
+    const response = await axios.get(apiUrl, {
+      headers: {
+        'Token': CHAINALYSIS_API_TOKEN,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    // Process the response to handle null values
+    const processValue = (value: any): any => {
+      if (value === null) {
+        return "null";
+      } else if (Array.isArray(value)) {
+        return value.map(processValue);
+      } else if (typeof value === 'object' && value !== null) {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, val]) => [key, processValue(val)])
+        );
+      }
+      return value;
+    };
+    
+    const processedData = processValue(response.data);
+    return res.json(processedData);
+  } catch (error: any) {
+    console.error('Error processing risk assessment:', error);
+    
+    // Handle Chainalysis API errors
+    if (error.response) {
+      const statusCode = error.response.status || 500;
+      return res.status(statusCode).json({
+        error: error.response.data.error || 'API Error',
+        message: error.response.data.message || 'Failed to process risk assessment',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to process risk assessment',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Original GET endpoint - forwards requests to the Chainalysis API
 app.get('/api/risk/v2/entities/:address', validateAddress, async (req: Request, res: Response) => {
   try {
     // Check for validation errors
