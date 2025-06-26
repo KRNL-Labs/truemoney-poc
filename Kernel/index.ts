@@ -84,6 +84,15 @@ const validateAddress = [
     .withMessage('Invalid Ethereum address format')
 ];
 
+// Helper to rename top-level 'address' to 'walletAddress'
+const renameTopAddressKey = (data: any): any => {
+  if (data && typeof data === 'object' && !Array.isArray(data) && 'address' in data) {
+    const { address, ...rest } = data as any;
+    return { walletAddress: address, ...rest };
+  }
+  return data;
+};
+
 // Routes
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
@@ -134,7 +143,7 @@ app.post('/api/risk/v2/entities', [
     };
     
     const processedData = processValue(response.data);
-    return res.json(processedData);
+    return res.json(renameTopAddressKey(processedData));
   } catch (error: any) {
     console.error('Error processing risk assessment:', error);
     
@@ -195,7 +204,7 @@ app.get('/api/risk/v2/entities/:address', validateAddress, async (req: Request, 
     };
     
     const processedData = processValue(response.data);
-    return res.json(processedData);
+    return res.json(renameTopAddressKey(processedData));
   } catch (error: any) {
     console.error('Error processing risk assessment:', error);
     
@@ -233,7 +242,8 @@ const processBatchResults = (results: any[]) => {
   };
 
   return results.map(result => ({
-    ...result,
+    walletAddress: result.address,
+    ...(result.error ? { error: result.error } : {}),
     assessment: result.assessment ? processValue(result.assessment) : undefined
   }));
 };
