@@ -24,6 +24,12 @@ if (!CHAINALYSIS_API_TOKEN) {
 app.use(cors());
 app.use(express.json());
 
+// Add ngrok-skip-browser-warning header to all responses
+app.use((req, res, next) => {
+  res.setHeader('ngrok-skip-browser-warning', 'true');
+  next();
+});
+
 // Types based on Chainalysis API documentation
 interface RiskAssessment {
   address: string;
