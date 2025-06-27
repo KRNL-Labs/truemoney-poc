@@ -93,6 +93,13 @@ const renameTopAddressKey = (data: any): any => {
   return data;
 };
 
+// Filter the Chainalysis response down to only the fields we care about
+const filterRiskFields = (data: any): { walletAddress: string; risk: string; riskReason?: string; status: string } => {
+  const renamed = renameTopAddressKey(data);
+  const { walletAddress, risk, riskReason, status } = renamed as any;
+  return { walletAddress, risk, riskReason, status };
+};
+
 // Routes
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
@@ -143,7 +150,7 @@ app.post('/api/risk/v2/entities', [
     };
     
     const processedData = processValue(response.data);
-    return res.json(renameTopAddressKey(processedData));
+    return res.json(filterRiskFields(processedData));
   } catch (error: any) {
     console.error('Error processing risk assessment:', error);
     
@@ -204,7 +211,7 @@ app.get('/api/risk/v2/entities/:address', validateAddress, async (req: Request, 
     };
     
     const processedData = processValue(response.data);
-    return res.json(renameTopAddressKey(processedData));
+    return res.json(filterRiskFields(processedData));
   } catch (error: any) {
     console.error('Error processing risk assessment:', error);
     
@@ -228,24 +235,16 @@ app.get('/api/risk/v2/entities/:address', validateAddress, async (req: Request, 
 
 // Process batch results with null handling
 const processBatchResults = (results: any[]) => {
-  const processValue = (value: any): any => {
-    if (value === null) {
-      return "null";
-    } else if (Array.isArray(value)) {
-      return value.map(processValue);
-    } else if (typeof value === 'object' && value !== null) {
-      return Object.fromEntries(
-        Object.entries(value).map(([key, val]) => [key, processValue(val)])
-      );
+  return results.map(result => {
+    if (result.error) {
+      return {
+        walletAddress: result.address,
+        error: result.error
+      };
     }
-    return value;
-  };
-
-  return results.map(result => ({
-    walletAddress: result.address,
-    ...(result.error ? { error: result.error } : {}),
-    assessment: result.assessment ? processValue(result.assessment) : undefined
-  }));
+    // result.assessment contains the full response; filter it
+    return filterRiskFields(result.assessment);
+  });
 };
 
 // Bulk analysis endpoint
