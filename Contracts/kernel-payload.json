@@ -1,0 +1,13 @@
+{
+  "senderAddress": "{{senderAddress}}",
+  "kernelPayload": {
+    "1672": {
+      "parameters": {
+        "header": {},
+        "body": {},
+        "query": {},
+        "path": {}
+      }
+    }
+  }
+}
