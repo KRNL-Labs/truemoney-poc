@@ -370,60 +370,127 @@ export default function P2PPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white bg-gradient-to-br from-black via-gray-900 to-black">
+    <main className="min-h-screen bg-black text-white">
+      {/* Enhanced Matrix background for entire page with more elements and continuous animation */}
+      <div className="fixed inset-0 -z-10 bg-black overflow-hidden">
+        {/* Static binary layer */}
+        <div className="absolute inset-0 opacity-5">
+          {[...Array(100)].map((_, i) => (
+            <div 
+              key={i}
+              className="absolute font-mono text-xs text-green-400"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: Math.random() * 0.8 + 0.2
+              }}
+            >
+              {Math.random() > 0.5 ? '1' : '0'}
+            </div>
+          ))}
+        </div>
+        
+        {/* Animated falling code */}
+        <div className="absolute inset-0 opacity-10">
+          {[...Array(50)].map((_, i) => (
+            <div 
+              key={`rain-${i}`}
+              className="absolute font-mono text-sm text-green-400"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `-20px`,
+                opacity: Math.random() * 0.7 + 0.3,
+                animation: `matrixRain ${3 + Math.random() * 5}s linear infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            >
+              {Math.random() > 0.5 ? '1' : '0'}
+            </div>
+          ))}
+        </div>
+        
+        {/* Grid overlay */}
+        <div className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px'
+          }}
+        />
+      </div>
+      
       {/* Buy transaction modal */}
       <BuyTransactionModal />
       
-      {/* Header */}
+      {/* Header - Added showListingForm state and setter */}
       <Header
         walletConnected={walletConnected}
         connectedAddress={connectedAddress}
         loading={walletLoading}
         connectWallet={connectWallet}
         disconnectWallet={disconnectWallet}
+        showListingForm={showListingForm}
+        setShowListingForm={setShowListingForm}
       />
-
-      {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero section */}
+      
+      {/* Hero section - moved outside the container for full width */}
+      <div className="w-full overflow-hidden">
         <HeroSection walletConnected={walletConnected} />
+      </div>
+      
+      {/* Main content - added margin-top for separation from hero */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative mt-16">
 
         {/* Main content area */}
         <div className="grid grid-cols-1 gap-8">
           {/* If wallet not connected, show connect wallet UI */}
           {!walletConnected ? (
-            <ConnectWallet 
-              connectWallet={connectWallet} 
-              loading={walletLoading} 
-            />
-          ) : (
-            /* If wallet is connected, show marketplace content */
-            <div>
-              {/* Create listing button or form */}
-              {!showListingForm ? (
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-500">
-                    P2P Game Marketplace
-                  </h2>
-                  <button
-                    onClick={() => setShowListingForm(true)}
-                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-md shadow-md hover:shadow-lg transition-all duration-200"
+            <div className="border border-green-500/30 bg-black/70 backdrop-blur-sm p-8 relative overflow-hidden">
+              {/* Matrix code background */}
+              <div className="absolute inset-0 opacity-10 overflow-hidden">
+                {[...Array(20)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="absolute font-mono text-xs text-green-400"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      opacity: Math.random() * 0.8 + 0.2
+                    }}
                   >
-                    Create New Listing
-                  </button>
+                    {Math.random() > 0.5 ? '1' : '0'}
+                  </div>
+                ))}
+              </div>
+              
+              <ConnectWallet 
+                connectWallet={connectWallet} 
+                loading={walletLoading} 
+              />
+            </div>
+          ) : (
+            <div className="relative">
+              {/* If wallet is connected, show marketplace content */}
+              {/* Show listing form or listings */}
+              {!showListingForm ? (
+                <div>
+                  {/* Removed KRNL P2P MARKETPLACE heading and CREATE_NEW_LISTING button */}
+                  <div className="h-2"></div> {/* Small spacer */}
                 </div>
               ) : (
-                /* Show listing form when creating a new listing */
                 <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-500">
-                      Create New Listing
+                  {/* Show listing form when creating a new listing */}
+                  <div className="flex justify-between items-center mb-6 border-b border-green-500/30 pb-4">
+                    <h2 className="text-2xl font-mono font-bold text-green-400">
+                      <span className="text-white">CREATE</span> NEW <span className="text-green-400">LISTING</span>
                     </h2>
                     <button
                       onClick={() => setShowListingForm(false)}
-                      className="px-4 py-2 border border-gray-600 text-gray-300 rounded-md hover:bg-gray-800 transition-all duration-200"
+                      className="px-4 py-2 border border-red-500/50 text-red-400 font-mono hover:bg-red-900/20 transition-all duration-200"
                     >
-                      Cancel
+                      CANCEL_OPERATION
                     </button>
                   </div>
                   

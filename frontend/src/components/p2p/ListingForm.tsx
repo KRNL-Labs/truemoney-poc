@@ -33,30 +33,47 @@ export const ListingForm = ({
   error
 }: ListingFormProps) => {
   return (
-    <div className="bg-gradient-to-b from-gray-900 to-black rounded-xl shadow-2xl border border-indigo-900/20 mb-8 overflow-hidden">
-      <div className="bg-gradient-to-r from-indigo-900/20 to-blue-900/20 px-6 py-4 border-b border-indigo-900/30">
-        <h3 className="text-xl font-semibold text-white flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-indigo-400 mr-2">
+    <div className="bg-black/90 rounded-xl shadow-2xl border border-green-500/30 mb-8 overflow-hidden relative">
+      {/* Matrix code background */}
+      <div className="absolute inset-0 opacity-5 overflow-hidden pointer-events-none">
+        {[...Array(30)].map((_, i) => (
+          <div 
+            key={i}
+            className="absolute font-mono text-xs text-green-400"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              opacity: Math.random() * 0.8 + 0.2
+            }}
+          >
+            {Math.random() > 0.5 ? '1' : '0'}
+          </div>
+        ))}
+      </div>
+      
+      <div className="bg-black/80 backdrop-blur-sm px-6 py-4 border-b border-green-500/30 relative z-10">
+        <h3 className="text-xl font-mono font-bold text-green-400 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-green-400 mr-2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Create New Listing
+          CREATE_NEW_LISTING
         </h3>
       </div>
       
-      <div className="p-6">
+      <div className="p-6 relative z-10">
         {error && (
-          <div className="mb-6 bg-red-900/30 text-red-400 text-sm p-3 rounded-lg border border-red-900/50 flex items-start">
+          <div className="mb-6 bg-black/80 text-red-400 text-sm p-3 border border-red-500/50 flex items-start font-mono">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0 text-red-500" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
-            {error}
+            <span className="animate-pulse">ERROR:</span> {error}
           </div>
         )}
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="verificationId" className="block text-sm font-medium text-indigo-300 mb-1.5">
-              Verification ID
+            <label htmlFor="verificationId" className="block text-sm font-mono font-medium text-green-400 mb-1.5">
+              VERIFICATION_ID
             </label>
             <div className="flex space-x-2">
               <input
@@ -65,45 +82,63 @@ export const ListingForm = ({
                 name="verificationId"
                 value={formData.verificationId}
                 onChange={handleInputChange}
-                className="flex-1 px-3 py-2.5 bg-gray-800/50 border border-indigo-900/30 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 text-gray-200"
+                className="flex-1 px-3 py-2.5 bg-black/70 border border-green-500/30 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-green-300 font-mono"
                 placeholder="Enter verification ID"
                 required
               />
               <button
                 type="button"
                 onClick={handleGenerateId}
-                className="px-4 py-2.5 bg-indigo-700/30 hover:bg-indigo-600/50 text-indigo-300 font-medium rounded-lg border border-indigo-700/30 hover:border-indigo-600/50 transition-all"
+                className="px-4 py-2.5 bg-black border border-green-500/50 text-green-400 font-mono hover:bg-green-900/20 hover:text-white transition-all relative overflow-hidden group"
               >
-                Generate ID
+                <span className="relative z-10">GENERATE_ID</span>
+                {/* Matrix code rain effect on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-30 overflow-hidden">
+                  {[...Array(3)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="absolute font-mono text-xs text-green-400"
+                      style={{
+                        left: `${i * 30}%`,
+                        top: '-20px',
+                        animation: `matrixRain ${1 + Math.random() * 2}s linear infinite`,
+                        animationDelay: `${Math.random() * 1}s`,
+                      }}
+                    >
+                      {Math.random() > 0.5 ? '1' : '0'}
+                    </div>
+                  ))}
+                </div>
               </button>
             </div>
-            <p className="mt-1 text-xs text-gray-400">A unique identifier for this verification</p>
+            <p className="mt-1 text-xs text-green-500/70 font-mono">// Unique identifier for asset verification</p>
           </div>
           
           <div>
-            <label htmlFor="assetType" className="block text-sm font-medium text-indigo-300 mb-1.5">
-              Asset Type
+            <label htmlFor="assetType" className="block text-sm font-mono font-medium text-green-400 mb-1.5">
+              ASSET_TYPE
             </label>
             <select
               id="assetType"
               name="assetType"
               value={formData.assetType}
               onChange={handleInputChange}
-              className="w-full px-3 py-2.5 bg-gray-800/50 border border-indigo-900/30 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 text-gray-200"
+              className="w-full px-3 py-2.5 bg-black/70 border border-green-500/30 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-green-300 font-mono"
               required
             >
-              <option value="">Select asset type</option>
-              <option value="skin">Skin</option>
-              <option value="weapon">Weapon</option>
-              <option value="character">Character</option>
-              <option value="item">Item</option>
-              <option value="other">Other</option>
+              <option value="" className="bg-black text-green-300">Select asset type</option>
+              <option value="skin" className="bg-black text-green-300">Skin</option>
+              <option value="weapon" className="bg-black text-green-300">Weapon</option>
+              <option value="character" className="bg-black text-green-300">Character</option>
+              <option value="item" className="bg-black text-green-300">Item</option>
+              <option value="other" className="bg-black text-green-300">Other</option>
             </select>
+            <p className="mt-1 text-xs text-green-500/70 font-mono">// Classification of digital asset</p>
           </div>
           
           <div>
-            <label htmlFor="assetName" className="block text-sm font-medium text-indigo-300 mb-1.5">
-              Asset Name
+            <label htmlFor="assetName" className="block text-sm font-mono font-medium text-green-400 mb-1.5">
+              ASSET_NAME
             </label>
             <input
               type="text"
@@ -111,15 +146,16 @@ export const ListingForm = ({
               name="assetName"
               value={formData.assetName}
               onChange={handleInputChange}
-              className="w-full px-3 py-2.5 bg-gray-800/50 border border-indigo-900/30 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 text-gray-200"
+              className="w-full px-3 py-2.5 bg-black/70 border border-green-500/30 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-green-300 font-mono"
               placeholder="Enter asset name"
               required
             />
+            <p className="mt-1 text-xs text-green-500/70 font-mono">// Unique identifier for the digital asset</p>
           </div>
           
           <div>
-            <label htmlFor="gameTitle" className="block text-sm font-medium text-indigo-300 mb-1.5">
-              Game Title
+            <label htmlFor="gameTitle" className="block text-sm font-mono font-medium text-green-400 mb-1.5">
+              GAME_TITLE
             </label>
             <input
               type="text"
@@ -127,15 +163,16 @@ export const ListingForm = ({
               name="gameTitle"
               value={formData.gameTitle}
               onChange={handleInputChange}
-              className="w-full px-3 py-2.5 bg-gray-800/50 border border-indigo-900/30 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 text-gray-200"
+              className="w-full px-3 py-2.5 bg-black/70 border border-green-500/30 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-green-300 font-mono"
               placeholder="Enter game title"
               required
             />
+            <p className="mt-1 text-xs text-green-500/70 font-mono">// Source game environment</p>
           </div>
           
           <div>
-            <label htmlFor="price" className="block text-sm font-medium text-indigo-300 mb-1.5">
-              Price (ETH)
+            <label htmlFor="price" className="block text-sm font-mono font-medium text-green-400 mb-1.5">
+              PRICE_ETH
             </label>
             <div className="relative">
               <input
@@ -146,37 +183,58 @@ export const ListingForm = ({
                 onChange={handleInputChange}
                 step="0.001"
                 min="0"
-                className="w-full pl-10 pr-3 py-2.5 bg-gray-800/50 border border-indigo-900/30 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 text-gray-200"
+                className="w-full pl-10 pr-3 py-2.5 bg-black/70 border border-green-500/30 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-green-300 font-mono"
                 placeholder="0.00"
                 required
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-400">Ξ</span>
+                <span className="text-green-400 font-mono">Ξ</span>
               </div>
             </div>
+            <p className="mt-1 text-xs text-green-500/70 font-mono">// Transaction value in ETH</p>
           </div>
           
           <div className="pt-2">
             <button
               type="submit"
               disabled={error !== '' || txState.loading}
-              className={`w-full flex justify-center items-center py-3 px-4 rounded-lg shadow-lg text-base font-medium transition-all duration-300 ${
+              className={`w-full flex justify-center items-center py-3 px-4 shadow-lg text-base font-mono font-medium transition-all duration-300 relative overflow-hidden group ${
                 error !== '' || txState.loading 
-                  ? 'bg-indigo-400/50 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-indigo-500/20 hover:shadow-indigo-500/40'
+                  ? 'bg-black/50 border border-green-500/30 text-green-400/50 cursor-not-allowed' 
+                  : 'bg-black border border-green-500 text-green-400 hover:bg-green-900/20 hover:text-white shadow-green-500/20 hover:shadow-green-500/30'
               }`}
             >
+              {/* Matrix code rain effect on hover */}
+              {!txState.loading && (
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-30 overflow-hidden">
+                  {[...Array(5)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="absolute font-mono text-xs text-green-400"
+                      style={{
+                        left: `${i * 20}%`,
+                        top: '-20px',
+                        animation: `matrixRain ${1 + Math.random() * 2}s linear infinite`,
+                        animationDelay: `${Math.random() * 1}s`,
+                      }}
+                    >
+                      {Math.random() > 0.5 ? '1' : '0'}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               {txState.loading ? (
                 <>
-                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-3"></div>
-                  <span>Processing...</span>
+                  <div className="animate-spin h-5 w-5 border-2 border-green-400 border-t-transparent mr-3 relative z-10"></div>
+                  <span className="relative z-10 tracking-wider">PROCESSING_TRANSACTION...</span>
                 </>
               ) : (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2 relative z-10">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
-                  Create Listing
+                  <span className="relative z-10 tracking-wider">CREATE_LISTING</span>
                 </>
               )}
             </button>
@@ -184,36 +242,82 @@ export const ListingForm = ({
           
           {/* Transaction status */}
           {txState.success && (
-            <div className="mt-6 p-4 bg-green-900/30 border border-green-700/30 rounded-lg">
-              <div className="flex items-center">
+            <div className="mt-6 p-4 bg-black/80 border border-green-500/50 relative overflow-hidden">
+              {/* Matrix code background */}
+              <div className="absolute inset-0 opacity-5 overflow-hidden pointer-events-none">
+                {[...Array(10)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="absolute font-mono text-xs text-green-400"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      opacity: Math.random() * 0.8 + 0.2
+                    }}
+                  >
+                    {Math.random() > 0.5 ? '1' : '0'}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex items-center relative z-10">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <p className="text-green-300 font-medium">Listing created successfully!</p>
+                <p className="text-green-400 font-mono font-medium">TRANSACTION_SUCCESSFUL</p>
               </div>
-              <p className="text-green-200 text-sm mt-2">
-                Transaction hash: 
-                <a 
-                  href={`https://sepolia.etherscan.io/tx/${txState.txHash}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="ml-1 underline hover:text-green-100 font-medium"
-                >
-                  {txState.txHash.substring(0, 10)}...{txState.txHash.substring(txState.txHash.length - 8)}
-                </a>
-              </p>
+              
+              <div className="mt-3 pt-3 border-t border-green-500/30 relative z-10">
+                <div className="font-mono text-xs text-green-500/70 mb-1">// Transaction verified by KRNL</div>
+                <p className="text-green-300 text-sm font-mono flex items-center">
+                  <span className="text-white mr-2">TX_HASH:</span>
+                  <a 
+                    href={`https://sepolia.etherscan.io/tx/${txState.txHash}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-green-400 hover:text-green-300 hover:underline transition-all"
+                  >
+                    {txState.txHash.substring(0, 10)}...{txState.txHash.substring(txState.txHash.length - 8)}
+                  </a>
+                  <span className="ml-2 h-2 w-2 bg-green-400 rounded-full animate-pulse"></span>
+                </p>
+              </div>
             </div>
           )}
           
           {txState.error && (
-            <div className="mt-6 p-4 bg-red-900/30 border border-red-700/30 rounded-lg">
-              <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-300 font-medium">Transaction failed</p>
+            <div className="mt-6 p-4 bg-black/80 border border-red-500/50 relative overflow-hidden">
+              {/* Matrix code background with red tint */}
+              <div className="absolute inset-0 opacity-5 overflow-hidden pointer-events-none">
+                {[...Array(10)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="absolute font-mono text-xs text-red-400"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      opacity: Math.random() * 0.8 + 0.2
+                    }}
+                  >
+                    {Math.random() > 0.5 ? '0' : 'X'}
+                  </div>
+                ))}
               </div>
-              <p className="text-red-200 text-sm mt-2 break-all">{txState.error}</p>
+              
+              <div className="flex items-start relative z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <p className="text-red-400 font-mono font-medium animate-pulse">TRANSACTION_ERROR</p>
+                  <div className="mt-2 pt-2 border-t border-red-500/30">
+                    <p className="text-red-300 text-sm font-mono">
+                      <span className="text-white mr-2">ERROR_MSG:</span>
+                      {txState.error}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </form>
@@ -222,4 +326,4 @@ export const ListingForm = ({
   );
 };
 
-export default ListingForm;
+// Component is already exported as a named export
