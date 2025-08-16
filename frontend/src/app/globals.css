@@ -19,39 +19,87 @@
   }
 }
 
-/* Grid pattern for backgrounds */
-.bg-grid-pattern {
-  background-image: 
-    linear-gradient(to right, rgba(99, 102, 241, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
-/* Matrix-style animations */
-@keyframes matrixRain {
-  0% { transform: translateY(-20px); opacity: 1; }
-  90% { opacity: 0.5; }
-  100% { transform: translateY(100vh); opacity: 0; }
+/* iOS-specific animations */
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes matrixGlow {
-  0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 255, 0, 0.3)); }
-  50% { filter: drop-shadow(0 0 40px rgba(0, 255, 0, 0.6)); }
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes gridFlow {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(60px, 60px); }
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* iOS button press effect */
+.ios-button-press:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-out;
+}
+
+/* iOS-style haptic feedback simulation */
+.ios-haptic:active::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: inherit;
+  animation: haptic-ring 0.3s ease-out;
+}
+
+@keyframes haptic-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 0;
+  }
 }

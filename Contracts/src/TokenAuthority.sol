@@ -26,60 +26,28 @@ contract TokenAuthority is Ownable {
         string err;
     }
 
-        // Nested structs for full Chainanalysis response - All fields in alphabetical order
-
-    // Rule triggered details
-    struct RuleTriggered {
-        string category;
-        string description;
-        string id;
-        string name;
-        uint256 threshold;
+    // Webhook response containing the actual decision
+    struct WebhookResponse {
+        string eventType; // "transaction.updated"
+        WebhookPayload payload;
     }
 
-    // Trigger information
-    struct Trigger {
-        string category;
-        string message;
-        uint256 percentage;
-        RuleTriggered ruleTriggered;
-    }
-
-    // Exposure information  
-    struct Exposure {
-        string category;
-        string direction;
-        string exposureType;
-        uint256 value;
-    }
-
-    // Address identification details
-    struct AddressIdentification {
-        string addressUrl;
-        string category;
-        string description;
-        string name;
-        string rootAddressUrl;
-        string url;
-    }
-
-    // Cluster information
-    struct ClusterInfo {
-        string category;
-        string name;
-    }
-
-    // Full Chainanalysis response structure - Fields in alphabetical order to match API
-    struct ChainanalysisResponse {
-        AddressIdentification[] addressIdentifications; // API field: "addressIdentifications"
-        string addressType;                             // API field: "addressType"
-        ClusterInfo cluster;                            // API field: "cluster"
-        Exposure[] exposures;                           // API field: "exposures"
-        string risk;                                    // API field: "risk"
-        string riskReason;                              // API field: "riskReason"
-        string status;                                  // API field: "status"
-        Trigger[] triggers;                             // API field: "triggers"
-        string walletAddress;                           // API field: "walletAddress"
+    // The main payload with transaction decision - Sorted alphabetically for proper decoding
+    struct WebhookPayload {
+        // Fields must be in alphabetical order for proper decoding according to KRNL docs
+        string createdAt;           // ISO format timestamp
+        string customerId;          // UUID format
+        string externalTransactionId; // Your original transaction ID
+        string id;                  // Review ID
+        string reason;              // Reason for the decision
+        string riskLevel;           // "Low", "Medium", "High"
+        uint256 riskScore;          // Risk score (0 if null/not available)
+        string status;              // "pending", "approved", "rejected", "under_review"
+        string transactionDate;     // ISO format timestamp
+        string transactionId;       // ComPilot transaction ID
+        string transactionType;     // "crypto" or "fiat"
+        string updatedAt;           // ISO format timestamp
+        string workspaceId;         // Workspace identifier
     }
 
     mapping(address => bool) private whitelist; // krnlNodePubKey to bool
@@ -89,8 +57,9 @@ contract TokenAuthority is Ownable {
     constructor(address initialOwner) Ownable(initialOwner) {
         signingKeypair = _generateKey();
         accessKeypair = _generateKey();
-
-        kernels[1672] = true;
+        
+    
+        kernels[1657] = true;
 
         // Set node whitelist
         whitelist[address(0xc770EAc29244C1F88E14a61a6B99d184bfAe93f5)] = true;
@@ -135,22 +104,22 @@ contract TokenAuthority is Ownable {
         );
 
         for (uint256 i = 0; i < _executions.length; i++) {
-            // if (_executions[i].kernelId == 1672) {
-            //     ChainanalysisResponse memory result = abi.decode(_executions[i].result, (ChainanalysisResponse));
-            //     // if (keccak256(bytes(result.walletAddress)) != keccak256(bytes("null"))) {
-            //     //     _executions[i].isValidated = true;
-            //     //     _executions[i].opinion = true;
-            //     //     _executions[i].opinionDetails = "Wallet address is not null";
-            //     // } else {
-            //     //     _executions[i].isValidated = false;
-            //     //     _executions[i].opinion = false;
-            //     //     _executions[i].opinionDetails = "Wallet address is null";
-            //     // }
+            if (_executions[i].kernelId == 1657) {
+                WebhookResponse memory result = abi.decode(_executions[i].result, (WebhookResponse));
+                if (keccak256(bytes(result.payload.status)) == keccak256(bytes("approved"))) {
+                    _executions[i].isValidated = true;
+                    _executions[i].opinion = true;
+                    _executions[i].opinionDetails = "Transaction approved by ComPilot";
+                } else {
+                    _executions[i].isValidated = false;
+                    _executions[i].opinion = false;
+                    _executions[i].opinionDetails = "Transaction rejected by ComPilot";
+                }
 
-            
-            // }
-                _executions[i].isValidated = true;
-                _executions[i].opinion = true;
+                // _executions[i].isValidated = true;
+                // _executions[i].opinion = true;
+                // _executions[i].opinionDetails = "Transaction approved by ComPilot";
+            }
         }
         
         return abi.encode(_executions);
